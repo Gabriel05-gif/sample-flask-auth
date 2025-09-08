@@ -15,7 +15,7 @@ login_manager.login_view = 'login'
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(user_id)
+    return db.session.get(User, int(user_id))
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -57,10 +57,25 @@ def create_user():
 @app.route('/user/<int:id_user>', methods=['GET'])
 @login_required
 def read_user(id_user):
-    user = User.query.get(id_user)
+    user = db.session.get(User, id_user)
 
     if user:
+        print(user.password)
         return {"username": user.username}
+    
+    return jsonify({"message": "Usuário não encontrado!"}),404
+
+@app.route('/user/<int:id_user>', methods=['PUT'])
+@login_required
+def update_user(id_user):
+    data = request.json
+    user = db.session.get(User, id_user)
+    
+    if user and data.get("password"):
+        user.password = data.get("password")
+        db.session.commit()
+        
+        return jsonify({"message": f"Usuário: {id_user} atualizado com sucesso!"})
     
     return jsonify({"message": "Usuário não encontrado!"}),404
 
