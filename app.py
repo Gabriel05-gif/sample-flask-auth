@@ -60,7 +60,6 @@ def read_user(id_user):
     user = db.session.get(User, id_user)
 
     if user:
-        print(user.password)
         return {"username": user.username}
     
     return jsonify({"message": "Usuário não encontrado!"}),404
@@ -74,14 +73,25 @@ def update_user(id_user):
     if user and data.get("password"):
         user.password = data.get("password")
         db.session.commit()
-        
+
         return jsonify({"message": f"Usuário: {id_user} atualizado com sucesso!"})
     
     return jsonify({"message": "Usuário não encontrado!"}),404
 
-@app.route("/hello-world", methods=["GET"])
-def hello_world():
-    return "Hello World"
+@app.route('/user/<int:id_user>', methods=['DELETE'])
+@login_required
+def delete_user(id_user):
+    user = db.session.get(User, id_user)
+
+    if id_user == current_user.id:
+        return jsonify({"message": "Deleção não permitida"}), 403
+
+    if user:
+        db.session.delete(user)
+        db.session.commit()
+        return jsonify({"message": f"Usuário: {id_user} deletado com sucesso!"})
+    
+    return jsonify({"message": "Usuário não encontrado!"}), 404
 
 if __name__ == '__main__': 
     app.run(debug=True, port=5001)
